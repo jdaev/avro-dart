@@ -1,22 +1,26 @@
 library avro_schema_test;
 
-import 'package:unittest/vm_config.dart';
-import 'package:unittest/unittest.dart';
+import 'package:test/test.dart';
+
 import '../lib/schema.dart';
 
 main() {
-  useVmConfiguration();
-
   testSchema();
 }
 
 void testSchema() {
   group('Schema.parse', () {
     test('throws on undefined type reference', () {
-      expect(() => new Schema.parse('"mytype"'), throwsA(predicate((AvroTypeError e) => e.message == 'Undefined type "mytype"')));
+      expect(
+          () => new Schema.parse('"mytype"'),
+          throwsA(predicate(
+              (AvroTypeError e) => e.message == 'Undefined type "mytype"')));
     });
     test('throws on undefined type name', () {
-      expect(() => new Schema.parse('{"type":"mytype"}'), throwsA(predicate((AvroTypeError e) => e.message == 'Undefined type "mytype"')));
+      expect(
+          () => new Schema.parse('{"type":"mytype"}'),
+          throwsA(predicate(
+              (AvroTypeError e) => e.message == 'Undefined type "mytype"')));
     });
     group('primitives', () {
       test('null', () {
@@ -56,36 +60,63 @@ void testSchema() {
       void expectRecord(String json, Record expected) {
         expect(new Schema.parse(json), expected);
       }
+
       test('empty record', () {
-        expectRecord('{"type":"record", "name":"EmptyRecord", "fields":[]}', new Record('EmptyRecord', null, []));
+        expectRecord('{"type":"record", "name":"EmptyRecord", "fields":[]}',
+            new Record('EmptyRecord', null, []));
       });
       test('empty record with namespace', () {
-        expectRecord('{"type":"record", "name":"EmptyRecord", "namespace":"a.b", "fields":[]}', new Record('EmptyRecord', 'a.b', []));
+        expectRecord(
+            '{"type":"record", "name":"EmptyRecord", "namespace":"a.b", "fields":[]}',
+            new Record('EmptyRecord', 'a.b', []));
       });
       test('record with null', () {
-        expectRecord('{"type":"record", "name":"RecordWithNull", "fields":[{"type":"null", "name":"nullField"}]}', new Record('RecordWithNull', null, [new Field('nullField', new AvroNull(), null, 0)]));
+        expectRecord(
+            '{"type":"record", "name":"RecordWithNull", "fields":[{"type":"null", "name":"nullField"}]}',
+            new Record('RecordWithNull', null,
+                [new Field('nullField', new AvroNull(), null, 0)]));
       });
       test('record with null and int', () {
-        expectRecord('{"type":"record", "name":"RecordWithNullAndInt", "fields":[{"type":"null", "name":"nullField"}, {"type":"int", "name":"intField"}]}', new Record('RecordWithNullAndInt', null, [new Field('nullField', new AvroNull(), null, 0), new Field('intField', new AvroInt(), null, 1)]));
+        expectRecord(
+            '{"type":"record", "name":"RecordWithNullAndInt", "fields":[{"type":"null", "name":"nullField"}, {"type":"int", "name":"intField"}]}',
+            new Record('RecordWithNullAndInt', null, [
+              new Field('nullField', new AvroNull(), null, 0),
+              new Field('intField', new AvroInt(), null, 1)
+            ]));
       });
       test('record with sub-record', () {
-        expectRecord('{"type":"record", "name":"RecordWithSubrecord", "fields":[{"type":{"type":"record","fields":[]}, "name":"subrecordField"}]}', new Record('RecordWithSubrecord', null, [new Field('subrecordField', new Record(null, null, []), null, 0)]));
+        expectRecord(
+            '{"type":"record", "name":"RecordWithSubrecord", "fields":[{"type":{"type":"record","fields":[]}, "name":"subrecordField"}]}',
+            new Record('RecordWithSubrecord', null, [
+              new Field('subrecordField', new Record(null, null, []), null, 0)
+            ]));
       });
       test('throws on undefined field type', () {
-        expect(() => new Schema.parse('{"type":"record", "name":"RecordWithUndefinedField", "fields":[{"type":"doesntexist", "name":"doesntexistField"}]}'), throwsA(predicate((AvroTypeError e) => e.message == 'Undefined type "doesntexist"')));
+        expect(
+            () => new Schema.parse(
+                '{"type":"record", "name":"RecordWithUndefinedField", "fields":[{"type":"doesntexist", "name":"doesntexistField"}]}'),
+            throwsA(predicate((AvroTypeError e) =>
+                e.message == 'Undefined type "doesntexist"')));
       });
     });
     group('enums', () {
       test('enum with two symbols', () {
-        expect(new Schema.parse('{"type":"enum", "name":"MyEnum", "symbols":["A","B"]}'), new Enum('MyEnum', null, ['A', 'B']));
+        expect(
+            new Schema.parse(
+                '{"type":"enum", "name":"MyEnum", "symbols":["A","B"]}'),
+            new Enum('MyEnum', null, ['A', 'B']));
       });
     });
     group('arrays', () {
       test('array with int (primitive type) items', () {
-        expect(new Schema.parse('{"type":"array", "items":"int"}'), new ArraySchema(new AvroInt()));
+        expect(new Schema.parse('{"type":"array", "items":"int"}'),
+            new ArraySchema(new AvroInt()));
       });
       test('array with enum (complex type) items', () {
-        expect(new Schema.parse('{"type":"array", "items":{"type":"enum", "name":"MyEnum", "symbols":["A","B"]}}'), new ArraySchema(new Enum('MyEnum', null, ['A', 'B'])));
+        expect(
+            new Schema.parse(
+                '{"type":"array", "items":{"type":"enum", "name":"MyEnum", "symbols":["A","B"]}}'),
+            new ArraySchema(new Enum('MyEnum', null, ['A', 'B'])));
       });
     });
     group('unions', () {
@@ -96,7 +127,8 @@ void testSchema() {
         expect(new Schema.parse('["string"]'), new Union([new AvroString()]));
       });
       test('union with two branches', () {
-        expect(new Schema.parse('["string", "int"]'), new Union([new AvroString(), new AvroInt()]));
+        expect(new Schema.parse('["string", "int"]'),
+            new Union([new AvroString(), new AvroInt()]));
       });
     });
   });
